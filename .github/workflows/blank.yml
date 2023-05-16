@@ -36,7 +36,7 @@ jobs:
           remove-android: 'true'
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
-      - uses: actions/checkout@v3
+      uses: actions/checkout@v3
     - name: Echo Free space
       run: |
         echo "Free space"
