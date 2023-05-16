@@ -34,6 +34,8 @@ jobs:
           remove-dotnet: 'true'
           remove-haskell: 'true'
           remove-android: 'true'
+          remove-docker-images: 'true'
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
       uses: actions/checkout@v3
@@ -42,6 +44,20 @@ jobs:
         echo "Free space"
         df -h
       # Runs a single command using the runners shell
+    - name: charge 
+      run: |
+            sudo bash -c "cat << EOF > /etc/apt/sources.list && apt update 
+        deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
+        deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse
+        deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
+        deb http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse
+        deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
+        EOF"
     - name: Set up Python 2.x
       uses: actions/setup-python@v2
       with:
