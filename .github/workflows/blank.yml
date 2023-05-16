@@ -35,6 +35,8 @@ jobs:
           remove-haskell: 'true'
           remove-android: 'true'
           remove-docker-images: 'true'
+          remove-codeql: 'true'
+
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
