@@ -1,36 +1,108 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Build aarch64 flutter
+
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
-
+    branches: [ main ]
+  schedule:
+      - cron: 00 16 * * *
+  watch:
+      types: [started]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-flutter-enfine:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@v4
+      with:
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-android: 'true'
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - name: Checkout
       - uses: actions/checkout@v3
-
+    - name: Echo Free space
+      run: |
+        echo "Free space"
+        df -h
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+    - name: Set up Python 2.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: '2.x'
+    - name: Prepare Env
+      run: |
+        sudo apt-get update
+        sudo apt-get install g++-aarch64-linux-gnu g++-arm-linux-gnueabihf
+        sudo apt-get install g++-multilib gcc-multilib
+        sudo apt-get install zip
+    - name: Get Resource
+      run: |
+        git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+        export PATH="$PATH:$PWD/depot_tools"
+        mkdir flutter-engine
+        echo 'solutions = [
+        {
+         "managed": False,
+         "name": "src/flutter",
+         "url": "https://github.com/flutter/engine",
+         "custom_deps": {},
+         "deps_file": "DEPS",
+         "safesync_url": "",
+        },
+        ]' >> flutter-engine/.gclient
+        cd flutter-engine
+        gclient sync
+    - name: Build Engine
+      run: |
+        export PATH="$PATH:$PWD/depot_tools"
+        cd flutter-engine/src
+        ls flutter/
+        ls flutter/tools
+        ./flutter/tools/gn --target-os android --linux-cpu arm64 --no-goma --runtime-mode release
+        ninja -C out/android_release_arm64
+        ./flutter/tools/gn --target-os android --linux-cpu arm64 --no-goma --runtime-mode debug
+        ninja -C out/android_debug_arm64
+        ./flutter/tools/gn --target-os linux --linux-cpu arm64 --no-goma --runtime-mode release
+        ninja -C out/linux_release_arm64
+        ./flutter/tools/gn --target-os linux --linux-cpu arm64 --no-goma --runtime-mode debug
+        ninja -C out/linux_debug_arm64
+    - name: Zip Engine
+      run: |
+        cd flutter-engine/src/out
+        ls
+        zip -q -r linux_release_arm64.zip linux_release_arm64
+        zip -q -r linux_debug_arm64.zip linux_debug_arm64
+        zip -q -r android_release_arm64.zip android_release_arm64
+        zip -q -r android_debug_arm64.zip android_debug_arm64
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+    - name: Test with environment variables
+      run: echo $TAG_NAME - $RELEASE_TIME
+      env:
+          TAG_NAME: Flutter-ARM64
+          RELEASE_TIME: ${{ steps.date.outputs.date }}
+    - name: Release Engine
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "flutter-engine/src/out/*.zip"
+        tag: Flutter-ARM64-${{ steps.date.outputs.date }}
+        token: ${{ secrets.RELEASE_TOKEN }}
+        allowUpdates: true
