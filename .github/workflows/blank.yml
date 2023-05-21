@@ -65,7 +65,7 @@ jobs:
         cd flutter-engine/src
         ls flutter/
         ls flutter/tools
-        /flutter/tools/gn --target-os linux --linux-cpu arm64 --runtime-mode debug --unoptimized \
+        ./flutter/tools/gn --target-os linux --linux-cpu arm64 --runtime-mode debug --unoptimized \
                      --embedder-for-target --disable-desktop-embeddings --no-build-embedder-examples \
                      --enable-fontconfig
          ninja -C out/linux_debug_unopt_arm64
