@@ -32,10 +32,10 @@ jobs:
       run: |
           echo "Free space:"
           df -h
-    - name: Set up Python 2.x
-      uses: actions/setup-python@v2
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v4
       with:
-        python-version: '2.x'
+        python-version: '3.10' 
     - name: Prepare Env
       run: |
         sudo apt-get update
@@ -65,18 +65,6 @@ jobs:
         cd flutter-engine/src
         ls flutter/
         ls flutter/tools
-        ./flutter/tools/gn --target-os linux --linux-cpu arm64 --runtime-mode debug --unoptimized \
-                     --embedder-for-target --disable-desktop-embeddings --no-build-embedder-examples \
-                     --enable-fontconfig
-         ninja -C out/linux_debug_unopt_arm64
-         ./flutter/tools/gn --target-os linux --linux-cpu arm64 --runtime-mode profile --no-lto \
-                     --embedder-for-target --disable-desktop-embeddings --no-build-embedder-examples \
-                     --enable-fontconfig
-         ninja -C out/linux_profile_arm64
-         ./flutter/tools/gn --target-os linux --linux-cpu arm64 --runtime-mode release \
-                     --embedder-for-target --disable-desktop-embeddings --no-build-embedder-examples \
-                     --enable-fontconfig
-         ninja -C out/elinux_release_arm64
         ./flutter/tools/gn --target-os linux --linux-cpu arm64 --no-goma --runtime-mode release
         ninja -C out/linux_release_arm64
         ./flutter/tools/gn --target-os linux --linux-cpu arm64 --no-goma --runtime-mode debug
@@ -87,10 +75,6 @@ jobs:
         ls
         zip -q -r linux_release_arm64.zip linux_release_arm64
         zip -q -r linux_debug_arm64.zip linux_debug_arm64
-        zip -q -r linux_debug_unopt_arm64.zip linux_debug_unopt_arm64
-        zip -q -r linux_profile_arm64.zip linux_profile_arm64
-        zip -q -r enlinux_release_arm64.zip elinux_release_arm64
-
     - name: Get current date
       id: date
       run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
